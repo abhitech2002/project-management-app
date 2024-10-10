@@ -15,6 +15,6 @@ router.route('/:id').get(verifyJWT, getProjectById)
 
 router.route('/:id').put(verifyJWT, updateProject)
 
-router.route('/:id').get(verifyJWT, deleteProject)
+router.route('/:id').delete(verifyJWT, deleteProject)
 
 export default router

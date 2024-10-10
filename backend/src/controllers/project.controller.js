@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Project } from "../models/project.models.js";
 import { User } from "../models/user.models.js";
+import { Task } from "../models/task.models.js";
 
 const projectCreate = asyncHandler(async (req, res) => {
   const { name, description, collaborators } = req.body;
@@ -118,27 +119,34 @@ const updateProject = asyncHandler(async (req, res, next) => {
 const deleteProject = asyncHandler(async (req, res, next) => {
   try {
     const projectId = req.params.id;
+    const userId = req.user._id;
 
-    const project = await Project.findOneAndDelete({
-      _id: projectId,
-      owner: req.user._id,
-    });
+    const project = await Project.findById(projectId);
 
     if (!project) {
-      return next(
-        new ApiError(404, "Project not found or you're not the owner")
-      );
+      throw new ApiError(404, "Project not found");
     }
 
-    await Task.deleteMany({ project: projectId });
+    if (project.owner.toString() !== userId.toString()) {
+      throw new ApiError(403, "You're not authorized to delete this project");
+    }
 
-    res
-      .status(200)
-      .json(new ApiResponse(200, {}, "Project deleted successfully"));
+    const deletedProject = await Project.findOneAndDelete({
+      _id: projectId,
+      owner: userId,
+    });
+
+    if (!deletedProject) {
+      throw new ApiError(500, "Failed to delete the project");
+    }
+
+    const deletedTasksCount = await Task.deleteMany({ project: projectId });
+    console.log(`Deleted ${deletedTasksCount.deletedCount} tasks`);
+
+    res.status(200).json(new ApiResponse(200, {}, "Project and associated tasks deleted successfully"));
   } catch (error) {
-    return next(
-      new ApiError(500, "Something went wrong while deleting the project")
-    );
+    console.error('Error deleting project:', error.stack);
+    next(error);
   }
 });
 
