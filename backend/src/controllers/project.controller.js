@@ -5,7 +5,7 @@ import { Project } from "../models/project.models.js";
 import { User } from "../models/user.models.js";
 
 const projectCreate = asyncHandler(async (req, res) => {
-  const { name, description } = req.body;
+  const { name, description, collaborators } = req.body;
 
   if (!name || !description) {
     throw new ApiError(400, "Project name or description required");
