@@ -82,6 +82,18 @@ const updateTask = asyncHandler(async (req, res, next) => {
     try {
         const { name, startDate, endDate, priority, status } = req.body;
 
+        const project = await Project.findById(req.params.projectId);
+
+        if (!project) {
+            return next(new ApiError(404, "Project not found"));
+        }
+
+        const task = await Task.findOne({ _id: req.params.taskId, project: project._id });
+
+        if (!task) {
+            return next(new ApiError(404, "Task not found"));
+        }
+
         const isOwner = project.owner.toString() === req.user._id.toString();
         const isCreator = task.creator.toString() === req.user._id.toString();
 
@@ -89,24 +101,28 @@ const updateTask = asyncHandler(async (req, res, next) => {
             return next(new ApiError(403, "You are not authorized to update this task"));
         }
 
-        const task = await Task.findOneAndUpdate(
-            { _id: req.params.taskId, project: req.params.projectId },
+        const updatedTask = await Task.findOneAndUpdate(
+            { _id: req.params.taskId },
             { name, startDate, endDate, priority, status },
             { new: true }
         );
 
-        if (!task) {
-            return next(new ApiError(404, "Task not found"));
-        }
-
-        res.status(200).json(new ApiResponse(200, { task }, "Task updated successfully"));
+        res.status(200).json(new ApiResponse(200, { task: updatedTask }, "Task updated successfully"));
     } catch (error) {
+        console.error(error);
+        
         return next(new ApiError(500, "Something went wrong while updating the task"));
     }
 });
 
 const deleteTask = asyncHandler(async (req, res, next) => {
     try {
+        const project = await Project.findById(req.params.projectId);
+
+        if (!project) {
+            return next(new ApiError(404, "Project not found"));
+        }
+        
         const task = await Task.findOneAndDelete({ _id: req.params.taskId, project: req.params.projectId });
 
         if (!task) {
