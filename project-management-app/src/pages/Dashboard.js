@@ -106,7 +106,7 @@ const Dashboard = () => {
                             <li key={project._id}>
                                 <h3>{project.name}</h3>
                                 <p>{project.description}</p>
-                                <button onClick={() => navigate(`/projects/${project._id}`)}>
+                                <button onClick={() => navigate(`/projects/${project._id}/tasks`)}>
                                     View Project
                                 </button>
                             </li>
