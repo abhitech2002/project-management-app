@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Project } from "../models/project.models.js";
-import { User } from "../models/user.models.js";
+// import { User } from "../models/user.models.js";
 
 const projectCreate = asyncHandler(async (req, res) => {
   const { name, description } = req.body;
@@ -69,7 +69,7 @@ const getProjectById = asyncHandler(async (req, res, next) => {
     const project = await Project.findOne({
       _id: projectId,
       owner: req.user._id,
-    });
+    }).populate('tasks');
 
     if (!project) {
       return next(new ApiError(404, "Project not found"));
