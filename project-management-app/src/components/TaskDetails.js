@@ -104,34 +104,39 @@ const TaskDetail = () => {
   }
 
   return (
-    <div className="task-detail">
-      <h2>Task Detail</h2>
+<div className="container mx-auto px-4 py-8">
+      <h2 className="text-2xl font-bold mb-4">Task Detail</h2>
 
       {task && (
-        <div>
+        <div className="bg-white shadow-md rounded-lg p-6">
           {isEditing ? (
-            <form onSubmit={handleUpdateTask}>
+            <form onSubmit={handleUpdateTask} className="space-y-4">
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                className="border border-gray-300 p-2 rounded w-full"
+                placeholder="Task Name"
               />
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 required
+                className="border border-gray-300 p-2 rounded w-full"
               />
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 required
+                className="border border-gray-300 p-2 rounded w-full"
               />
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
+                className="border border-gray-300 p-2 rounded w-full"
               >
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
@@ -140,28 +145,42 @@ const TaskDetail = () => {
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
+                className="border border-gray-300 p-2 rounded w-full"
               >
                 <option value="pending">Pending</option>
                 <option value="completed">Completed</option>
                 <option value="expired">Expired</option>
               </select>
-              <button type="submit">Save Task</button>
+              <button type="submit" className="bg-blue-500 text-white p-2 rounded">
+                Save Task
+              </button>
+              <button type="button" onClick={() => setIsEditing(false)} className="bg-gray-500 text-white p-2 rounded">
+                Cancel
+              </button>
             </form>
           ) : (
-            <div>
-              <h3>{task.name}</h3>
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold">{task.name}</h3>
               <p>
-                Start Date: {new Date(task.startDate).toLocaleDateString()}
+                <span className="font-bold">Start Date:</span> {new Date(task.startDate).toLocaleDateString()}
               </p>
               <p>
-                End Date: {new Date(task.endDate).toLocaleDateString()}
+                <span className="font-bold">End Date:</span> {new Date(task.endDate).toLocaleDateString()}
               </p>
-              <p>Priority: {task.priority}</p>
-              <p>Status: {task.status}</p>
-              <button onClick={() => setIsEditing(true)}>Edit Task</button>
-              <button onClick={handleDeleteTask} style={{ color: "red" }}>
-                Delete Task
-              </button>
+              <p>
+                <span className="font-bold">Priority:</span> {task.priority}
+              </p>
+              <p>
+                <span className="font-bold">Status:</span> {task.status}
+              </p>
+              <div className="flex space-x-2">
+                <button onClick={() => setIsEditing(true)} className="bg-green-500 text-white p-2 rounded">
+                  Edit Task
+                </button>
+                <button onClick={handleDeleteTask} className="bg-red-500 text-white p-2 rounded">
+                  Delete Task
+                </button>
+              </div>
             </div>
           )}
         </div>
