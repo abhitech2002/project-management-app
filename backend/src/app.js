@@ -5,10 +5,7 @@ import cookieParser from "cookie-parser";
 const app = express();
 
 app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true,
-  })
+  cors()
 );
 app.use(
   express.json({
@@ -26,7 +23,7 @@ import taskRouter from './routes/task.routes.js'
 
 // routes declaration
 app.use('/api/v1/users', userRouter)
-app.use('/api/v1/project', projectRouter)
-app.use('/api/v1/task', taskRouter)
+app.use('/api/v1/projects', projectRouter)
+app.use('/api/v1/tasks', taskRouter)
 
 export default app;
