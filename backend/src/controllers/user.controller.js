@@ -75,11 +75,30 @@ const loginUser = asyncHandler(async (req, res, next) => {
             return next(new ApiError(404, "User doesn't exist"));
         }
 
+        if (user.lockUntil && user.lockUntil > Date.now()) {
+            return res.status(403).json({ message: 'Account locked. Try again later.' });
+        }
+
         const isPasswordValid = await user.isPasswordCorrect(password);
 
         if (!isPasswordValid) {
+
+            user.failedLoginAttempts += 1;
+
+            if (user.failedLoginAttempts >= 5) {
+                user.lockUntil = Date.now() + 24 * 60 * 60 * 1000;
+            }
+
+            await user.save();
+
             return next(new ApiError(401, "Invalid user credentials"));
         }
+
+        user.failedLoginAttempts = 0;
+
+        user.lockUntil = undefined;
+
+        await user.save();
 
         const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
             user._id
