@@ -18,9 +18,10 @@ const TaskSchema = new Schema({
         enum: ['Low', 'Medium', 'High'], 
         default: 'Low' 
     },
-    completed: { 
-        type: Boolean, 
-        default: false 
+    status: {
+        type: String,
+        enum: ['pending', 'completed', 'expired'],
+        default: 'pending',
     },
     project: { 
         type: mongoose.Schema.Types.ObjectId, 
