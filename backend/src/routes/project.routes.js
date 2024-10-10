@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { deleteProject, getProjectById, getProjects, projectCreate, updateProject } from "../controllers/project.controller.js";
+import { addCollaborator, deleteProject, getProjectById, getProjects, projectCreate, updateProject } from "../controllers/project.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router()
@@ -8,6 +8,8 @@ const router = Router()
 router.route("/").post(verifyJWT, projectCreate)
 
 router.route("/").get(verifyJWT, getProjects)
+
+router.route("/:id/add").post(verifyJWT, addCollaborator)
 
 router.route('/:id').get(verifyJWT, getProjectById)
 

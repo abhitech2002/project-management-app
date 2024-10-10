@@ -1,13 +1,13 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import {Task} from "../models/task.models.js"
+import { Task } from "../models/task.models.js"
 import { Project } from "../models/project.models.js";
 
 const createTask = asyncHandler(async (req, res, next) => {
     try {
         const { name, startDate, endDate, priority } = req.body;
-        
+
         const projectId = req.params.id;
 
         if (!name || !startDate || !endDate || !priority) {
@@ -20,7 +20,10 @@ const createTask = asyncHandler(async (req, res, next) => {
             return next(new ApiError(404, "Project not found"));
         }
 
-        if (project.owner.toString() !== req.user._id.toString() && !project.collaborators.includes(req.user._id)) {
+        const isOwner = project.owner.toString() === req.user._id.toString();
+        const isCollaborator = project.collaborators.includes(req.user._id);
+
+        if (!isOwner && !isCollaborator) {
             return next(new ApiError(403, "You are not authorized to add tasks to this project"));
         }
 
@@ -31,6 +34,7 @@ const createTask = asyncHandler(async (req, res, next) => {
             priority,
             status: 'pending',
             project: projectId,
+            creator: req.user._id
         });
 
         await task.save();
@@ -77,6 +81,14 @@ const getTaskById = asyncHandler(async (req, res, next) => {
 const updateTask = asyncHandler(async (req, res, next) => {
     try {
         const { name, startDate, endDate, priority, status } = req.body;
+
+        const isOwner = project.owner.toString() === req.user._id.toString();
+        const isCreator = task.creator.toString() === req.user._id.toString();
+
+        if (!isOwner && !isCreator) {
+            return next(new ApiError(403, "You are not authorized to update this task"));
+        }
+
         const task = await Task.findOneAndUpdate(
             { _id: req.params.taskId, project: req.params.projectId },
             { name, startDate, endDate, priority, status },
@@ -99,6 +111,13 @@ const deleteTask = asyncHandler(async (req, res, next) => {
 
         if (!task) {
             return next(new ApiError(404, "Task not found"));
+        }
+
+        const isOwner = project.owner.toString() === req.user._id.toString();
+        const isCreator = task.creator.toString() === req.user._id.toString();
+
+        if (!isOwner && !isCreator) {
+            return next(new ApiError(403, "You are not authorized to delete this task"));
         }
 
         res.status(200).json(new ApiResponse(200, {}, "Task deleted successfully"));
