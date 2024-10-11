@@ -69,6 +69,7 @@ const Dashboard = () => {
     const handleLogout = async () => {
         try {
             const accessToken = localStorage.getItem("accessToken");
+            // eslint-disable-next-line
             const response = await axios.post(
                 "http://localhost:8000/api/v1/users/logout",
                 {}, 
@@ -82,7 +83,6 @@ const Dashboard = () => {
 
             localStorage.removeItem("accessToken");
 
-            // Redirect to the login page after successful logout
             navigate("/login");
         } catch (error) {
             console.error("Failed to log out:", error);
