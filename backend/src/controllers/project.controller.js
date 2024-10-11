@@ -44,7 +44,7 @@ const getProjects = asyncHandler(async (req, res, next) => {
   try {
     const projects = await Project.find({ owner: req.user._id }).populate(
       "collaborators",
-      "name email"
+      "fullName email"
     );
 
     if (!projects) {
@@ -70,7 +70,7 @@ const getProjectById = asyncHandler(async (req, res, next) => {
     const project = await Project.findOne({
       _id: projectId,
       owner: req.user._id,
-    }).populate('tasks');
+    }).populate('tasks').populate('collaborators', 'fullName email');
 
     if (!project) {
       return next(new ApiError(404, "Project not found"));

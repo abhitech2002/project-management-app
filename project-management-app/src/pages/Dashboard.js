@@ -66,6 +66,30 @@ const Dashboard = () => {
         }
     };
 
+    const handleLogout = async () => {
+        try {
+            const accessToken = localStorage.getItem("accessToken");
+            const response = await axios.post(
+                "http://localhost:8000/api/v1/users/logout",
+                {}, 
+                {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                    withCredentials: true,
+                }
+            );
+
+            localStorage.removeItem("accessToken");
+
+            // Redirect to the login page after successful logout
+            navigate("/login");
+        } catch (error) {
+            console.error("Failed to log out:", error);
+        }
+    };
+
+
     if (loading) {
         return <p className="text-center text-gray-500">Loading projects...</p>;
     }
@@ -74,10 +98,17 @@ const Dashboard = () => {
         return <p className="text-center text-red-500">{error}</p>;
     }
 
-
     return (
-<div className="container mx-auto p-6 bg-gray-50 min-h-screen">
-            <h2 className="text-3xl font-semibold text-center mb-6">Your Projects</h2>
+        <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-3xl font-semibold">Your Projects</h2>
+                <button
+                    onClick={handleLogout}
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-200"
+                >
+                    Logout
+                </button>
+            </div>
 
             <div className="text-center mb-4">
                 <button
@@ -123,6 +154,10 @@ const Dashboard = () => {
                             <li key={project._id} className="bg-white p-4 rounded shadow-md">
                                 <h3 className="text-xl font-semibold">{project.name}</h3>
                                 <p className="text-gray-700">{project.description}</p>
+                                <p className="text-gray-500">Owner: {project.owner}</p> 
+                                <p className="text-gray-500">
+                                    Created At: {new Date(project.createdAt).toLocaleDateString()} 
+                                </p>
                                 <div className="mt-4 flex justify-between">
                                     <button
                                         onClick={() => navigate(`/projects/${project._id}/tasks`)}
