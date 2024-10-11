@@ -24,7 +24,7 @@ const projectCreate = asyncHandler(async (req, res) => {
     name,
     description,
     owner: req.user._id,
-    collaborators: collaborators || []
+    collaborators: collaborators || [],
   });
 
   const createdProject = await Project.findById(project._id);
@@ -42,12 +42,13 @@ const projectCreate = asyncHandler(async (req, res) => {
 
 const getProjects = asyncHandler(async (req, res, next) => {
   try {
-    const projects = await Project.find({ owner: req.user._id }).populate(
-      "collaborators",
-      "fullName email"
-    );
+    const projects = await Project.find({
+      $or: [{ owner: req.user._id }, { collaborators: req.user._id }],
+    })
+      .populate("collaborators", "fullName email")
+      .populate("owner", "fullName");
 
-    if (!projects) {
+    if (!projects || projects.length === 0) {
       return next(new ApiError(404, "No projects found"));
     }
 
@@ -69,11 +70,14 @@ const getProjectById = asyncHandler(async (req, res, next) => {
 
     const project = await Project.findOne({
       _id: projectId,
-      owner: req.user._id,
-    }).populate('tasks').populate('collaborators', 'fullName email');
+      $or: [{ owner: req.user._id }, { collaborators: req.user._id }],
+    })
+      .populate("tasks")
+      .populate("collaborators", "fullName email")
+      .populate("owner", "fullName");
 
     if (!project) {
-      return next(new ApiError(404, "Project not found"));
+      return next(new ApiError(404, "Project not found or access denied"));
     }
 
     res
@@ -143,47 +147,62 @@ const deleteProject = asyncHandler(async (req, res, next) => {
     const deletedTasksCount = await Task.deleteMany({ project: projectId });
     console.log(`Deleted ${deletedTasksCount.deletedCount} tasks`);
 
-    res.status(200).json(new ApiResponse(200, {}, "Project and associated tasks deleted successfully"));
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          {},
+          "Project and associated tasks deleted successfully"
+        )
+      );
   } catch (error) {
-    console.error('Error deleting project:', error.stack);
+    console.error("Error deleting project:", error.stack);
     next(error);
   }
 });
 
-const addCollaborator = asyncHandler(async(req, res, next) => {
-    try {
-        const { collaboratorEmail } = req.body;
+const addCollaborator = asyncHandler(async (req, res, next) => {
+  try {
+    const { collaboratorEmail } = req.body;
 
-        const projectId = req.params.id;
+    const projectId = req.params.id;
 
-        const project = await Project.findById(projectId);
+    const project = await Project.findById(projectId);
 
-        if (project.owner.toString() !== req.user._id.toString()) {
-            return next(new ApiError(403, "You are not authorized to add collaborators"));
-        }
-
-        const collaborator = await User.findOne({ email: collaboratorEmail });
-
-        if (!collaborator) {
-            return next(new ApiError(404, "User with this email not found"));
-        }
-
-        if (project.collaborators.includes(collaborator._id)) {
-            return next(new ApiError(400, "User is already a collaborator"));
-        }
-
-        project.collaborators.push(collaborator._id);
-
-        await project.save();
-
-        res.status(200).json(new ApiResponse(200, { project }, "Collaborator added successfully"));
-
-    } catch (error) {
-        console.log(error);
-        
-        return next(new ApiError(500, "Something went wrong while adding a collaborator"));
+    if (project.owner.toString() !== req.user._id.toString()) {
+      return next(
+        new ApiError(403, "You are not authorized to add collaborators")
+      );
     }
-})
+
+    const collaborator = await User.findOne({ email: collaboratorEmail });
+
+    if (!collaborator) {
+      return next(new ApiError(404, "User with this email not found"));
+    }
+
+    if (project.collaborators.includes(collaborator._id)) {
+      return next(new ApiError(400, "User is already a collaborator"));
+    }
+
+    project.collaborators.push(collaborator._id);
+
+    await project.save();
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, { project }, "Collaborator added successfully")
+      );
+  } catch (error) {
+    console.log(error);
+
+    return next(
+      new ApiError(500, "Something went wrong while adding a collaborator")
+    );
+  }
+});
 
 export {
   projectCreate,
@@ -191,5 +210,5 @@ export {
   getProjectById,
   updateProject,
   deleteProject,
-  addCollaborator
+  addCollaborator,
 };
